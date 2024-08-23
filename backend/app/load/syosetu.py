@@ -27,24 +27,33 @@ def get_chapter_links(novel_url: str) -> list:
     chapter_links : list
         List of the links to all chapters
     """
-    response = requests.get(novel_url, headers=HEADERS)
-    response.raise_for_status()  # Ensure we notice bad responses
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Use BeautifulSoup to find all links to chapters
     chapter_links = []
-    
-    # Syosetu chapters usually have links in `a` tags within a specific structure.
-    for link in soup.find_all('a', href=True):
-        href = link['href']
-        # We assume chapter links contain 'novelid' which is common for Syosetu chapters
-        if (novel_url.split('/')[-2] in href and 
-            not(href.endswith(novel_url.split('/')[-2]+'/') ) and
-            not('?' in href.split('/')[-1])):
-            full_url = requests.compat.urljoin(novel_url, href)  # Make sure it's a full URL
-            chapter_links.append(full_url)
-    
+    next_page_url = novel_url
+
+    while next_page_url:
+        response = requests.get(next_page_url, headers=HEADERS)
+        response.raise_for_status()  # Ensure we notice bad responses
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Find all chapter links on the current page
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            # Assuming chapter links have the novel ID in them and are not the base novel URL or a query string
+            if (novel_url.split('/')[-2] in href and 
+                not(href.endswith(novel_url.split('/')[-2]+'/') ) and
+                not('?' in href.split('/')[-1])):
+                full_url = requests.compat.urljoin(novel_url, href)  # Ensure full URL
+                if full_url not in chapter_links:  # Avoid duplicates
+                    chapter_links.append(full_url)
+        
+        # Look for the "Next" link to go to the next page
+        next_page_tag = soup.find('a', text='次へ')
+        if next_page_tag:
+            next_page_url = requests.compat.urljoin(novel_url, next_page_tag['href'])
+            time.sleep(1)  # To be polite to the server
+        else:
+            next_page_url = None
     return chapter_links
 
 def download_chapter(chapter_url: str) -> str:
@@ -141,7 +150,10 @@ def download_novel(novel_url: str,
     novel_title = get_novel_title(novel_url)
     output_dir = os.path.join('shared/novels', output_dir)
     novel_dir = os.path.join(output_dir, sanitize_filename(novel_title))
-
+    # Create english translation directory
+    os.makedirs(novel_dir + '/english', exist_ok=True)
+    
+    novel_dir = os.path.join(novel_dir, '/raw')
     # Create the directory if it doesn't exist
     os.makedirs(novel_dir, exist_ok=True)
 
@@ -162,5 +174,3 @@ if __name__ == '__main__': # Test on a singular novel.
     novel_url = "https://ncode.syosetu.com/n7505bx/"  # Replace with the actual novel URL
     output_directory = "test_novel"
     download_novel(novel_url, output_directory)
-
-# %%

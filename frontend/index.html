@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translation App</title>
+    <link rel="stylesheet" href="src/renderer/styles/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Panel -->
+        <div id="top-panel">
+            <h1 id="novel-title">Novel Title</h1>
+            <button id="theme-toggle">Switch Theme</button>
+        </div>
+
+        <!-- Content Panels -->
+        <div id="content">
+            <div id="japanese-panel" class="panel">
+                <h2>Japanese Text</h2>
+                <div id="japanese-text">
+                    <!-- Japanese text will be loaded here -->
+                </div>
+            </div>
+
+            <div id="english-panel" class="panel">
+                <h2>English Translation</h2>
+                <div id="english-text">
+                    <!-- English translation will be entered here -->
+                </div>
+            </div>
+
+            <div id="notes-panel" class="panel">
+                <h2>Notes</h2>
+                <div id="notes-text">
+                    <!-- Notes will be entered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Comment Section -->
+        <div id="comments">
+            <h2>Comments</h2>
+            <textarea id="comment-box" placeholder="Leave a comment..."></textarea>
+        </div>
+    </div>
+
+    <script src="src/renderer/renderer.js"></script>
+</body>
+</html>

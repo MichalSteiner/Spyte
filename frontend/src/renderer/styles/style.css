@@ -1,0 +1,98 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+#top-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--panel-bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+#content {
+    display: flex;
+    flex: 1;
+    padding: 10px;
+}
+
+#japanese-text, #english-text {
+    position: relative;
+}
+
+.panel {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--border-color);
+    margin: 0 5px;
+    overflow-y: auto;
+}
+
+#notes-panel {
+    flex: 0.5;
+}
+
+#comments {
+    padding: 10px;
+    background-color: var(--panel-bg-color);
+    border-top: 1px solid var(--border-color);
+}
+
+#comments-section {
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+#comments-text {
+    width: 100%;
+    height: 100px;
+}
+
+textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    resize: none;
+}
+
+/* Light Mode */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --panel-bg-color: #f0f0f0;
+    --border-color: #cccccc;
+}
+
+/* Dark Mode */
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --panel-bg-color: #1e1e1e;
+    --border-color: #333333;
+}
+
+.panel {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--border-color);
+    margin: 0 5px;
+    overflow-y: auto; /* Make panel scrollable */
+    height: calc(100vh - 200px); /* Adjust height as needed */
+}
