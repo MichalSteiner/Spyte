@@ -29,7 +29,7 @@ async function loadJapaneseText(filePath) {
             // Ensure the textarea matches the height of the Japanese paragraph
             // Use a fixed height for the textarea or set it after rendering
             setTimeout(() => {
-                const paragraphHeight = jpParagraph.offsetHeight - 4; // Ensure this is correct
+                const paragraphHeight = jpParagraph.offsetHeight; // Ensure this is correct
                 engBox.style.height = `${paragraphHeight}px`;
             }, 0);
             
@@ -50,6 +50,63 @@ async function loadJapaneseText(filePath) {
     }
 }
 
+async function synchronizeParagraphs() {
+    const japaneseTextDiv = document.getElementById('japanese-text');
+    const englishTextDiv = document.getElementById('english-text');
+
+    const jpParagraphs = Array.from(japaneseTextDiv.children);
+    const engParagraphs = Array.from(englishTextDiv.children);
+
+    jpParagraphs.forEach((jpParagraph, index) => {
+        if (engParagraphs[index]) {
+            const jpHeight = jpParagraph.offsetHeight;
+            engParagraphs[index].style.height = `${jpHeight}px`;
+        }
+    });
+}
+
+
+async function saveNoteWithFootnotesAndHighlights(originalFilePath, noteText, paragraphIndex, highlightedWords) {
+    try {
+        const { japaneseContent } = await ipcRenderer.invoke('load-text-file', originalFilePath);
+
+        let jpParagraphs = japaneseContent.split('\n\n');
+        const footnoteMarker = `[${paragraphIndex + 1}]`;
+
+        // Append footnote marker to the relevant paragraph
+        jpParagraphs[paragraphIndex] += ` ${footnoteMarker}`;
+
+        // Append footnote text to the end of the document
+        jpParagraphs.push(`${footnoteMarker} ${noteText}`);
+
+        // Modify the paragraph to include highlighted markers (e.g., wrap with **)
+        highlightedWords.forEach(word => {
+            jpParagraphs[paragraphIndex] = jpParagraphs[paragraphIndex].replace(word, `**${word}**`);
+        });
+
+        // Save the modified Japanese content back to the file
+        const newContent = jpParagraphs.join('\n\n');
+        fs.writeFileSync(originalFilePath, newContent, 'utf-8');
+
+        console.log('Note and highlights saved successfully!');
+    } catch (err) {
+        console.error('Failed to save note and highlights:', err);
+    }
+}
+
+async function saveNotesToFile(noteText, paragraphIndex) {
+    try {
+        const notesFilePath = path.join(path.dirname(originalFilePath), 'notes.txt');
+        const noteEntry = `Paragraph ${paragraphIndex + 1}:\n${noteText}\n\n`;
+
+        // Append to the notes file
+        fs.appendFileSync(notesFilePath, noteEntry, 'utf-8');
+
+        console.log('Notes saved successfully to:', notesFilePath);
+    } catch (err) {
+        console.error('Failed to save notes to file:', err);
+    }
+}
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -105,7 +162,10 @@ window.addEventListener('DOMContentLoaded', () => {
         const filePath = await ipcRenderer.invoke('select-file');
         originalFilePath = filePath; // Store the original file path
         if (filePath) {
-            loadJapaneseText(filePath);
+            loadJapaneseText(filePath).then(() => {
+                synchronizeParagraphs();
+            });
+            
         }
     });
 
@@ -134,25 +194,28 @@ window.addEventListener('DOMContentLoaded', () => {
 document.body.appendChild(notePopup);
 
     let selectedParagraphIndex = null; // To store which paragraph is selected
+    let highlightedWords = [];
 
     japanesePanel.addEventListener('mouseup', (event) => {
         const selection = window.getSelection();
         const selectedText = selection.toString().trim();
-
+    
         if (selectedText) {
             const range = selection.getRangeAt(0);
             const parentParagraph = range.startContainer.parentElement;
             selectedParagraphIndex = Array.from(japanesePanel.children).indexOf(parentParagraph);
-
+    
+            highlightedWords.push(selectedText); // Add highlighted word to the array
+    
             const { top, left } = parentParagraph.getBoundingClientRect();
             notePopup.style.top = `${top + window.scrollY + 20}px`;
             notePopup.style.left = `${left + window.scrollX}px`;
             notePopup.style.display = 'block';
-
+    
             document.getElementById('note-text').focus();
         }
     });
-
+    
     // Confirm note on button click or Enter key press
     document.getElementById('confirm-note').addEventListener('click', saveNote);
     document.getElementById('note-text').addEventListener('keypress', (event) => {
@@ -181,12 +244,20 @@ document.body.appendChild(notePopup);
             const notePara = document.createElement('p');
             notePara.textContent = noteText;
             noteContainer.appendChild(notePara);
-        }
     
-        // Clear and hide the popup
-        document.getElementById('note-text').value = '';
-        notePopup.style.display = 'none';
+            // Save the note with highlights and to a separate file
+            saveNoteWithFootnotesAndHighlights(originalFilePath, noteText, selectedParagraphIndex, highlightedWords);
+            saveNotesToFile(noteText, selectedParagraphIndex);
+    
+            // Clear and hide the popup
+            document.getElementById('note-text').value = '';
+            notePopup.style.display = 'none';
+    
+            // Clear highlighted words after saving
+            highlightedWords = [];
+        }
     }
+    
     
     // Bind the saveNote function to the confirm button
     document.getElementById('confirm-note').addEventListener('click', saveNote);

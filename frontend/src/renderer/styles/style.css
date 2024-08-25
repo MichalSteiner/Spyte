@@ -11,6 +11,11 @@ body {
     --text-color: #000000;
     --panel-bg-color: #f0f0f0;
     --border-color: #cccccc;
+
+    /* Light Mode Japanese Text Styles */
+    --jp-bg-color-light: #e0f7fa; /* Light blue background for light mode */
+    --jp-border-color-light: #b2ebf2; /* Slightly darker blue border */
+    --jp-text-color-light: #000000; /* Text color for light mode */
 }
 
 /* Dark Mode Styles */
@@ -19,6 +24,11 @@ body.dark-mode {
     --text-color: #e0e0e0;
     --panel-bg-color: #1e1e1e;
     --border-color: #333333;
+
+    /* Dark Mode Japanese Text Styles */
+    --jp-bg-color-dark: #37474f; /* Dark grey-blue background for dark mode */
+    --jp-border-color-dark: #263238; /* Even darker grey-blue border */
+    --jp-text-color-dark: #ffffff; /* Text color for dark mode */
 }
 
 /* Main App Container */
@@ -70,15 +80,33 @@ body.dark-mode {
 
 #japanese-text p, #english-text textarea {
     margin: 0;
-    padding: 0px;
-    font-size: 18px; /* Increase the font size */
+    padding: 0;
+    font-size: 18px; /* Ensure font size is consistent */
     line-height: 1.6; /* Ensure consistent line height */
-    box-sizing: border-box; /* Ensure padding and border are included in the height */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
-#english-text textarea {
-    width: 90%; /* Make sure textarea uses full width available */
-    padding: 0px;
+/* Japanese Paragraph Styles */
+#japanese-text p {
+    position: relative;
+    margin: 0;
+    padding: 10px;
+    font-size: 18px;
+    line-height: 1.6;
+    border-radius: 8px; /* Rounded corners */
+    background-color: var(--jp-bg-color-light); /* Light mode background */
+    border: 1px solid var(--jp-border-color-light); /* Light mode border color */
+    color: var(--jp-text-color-light); /* Light mode text color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for a 3D effect */
+    margin-bottom: 20px; /* Space between paragraphs */
+    box-sizing: border-box; /* Ensure padding and border are included in total width and height */
+}
+
+/* Dark Mode Japanese Text */
+body.dark-mode #japanese-text p {
+    background-color: var(--jp-bg-color-dark); /* Dark mode background */
+    border: 1px solid var(--jp-border-color-dark); /* Dark mode border color */
+    color: var(--jp-text-color-dark); /* Dark mode text color */
 }
 
 /* Paragraph Separator */
@@ -134,9 +162,9 @@ button {
 textarea {
     width: 90%;
     height: 100px;
-    padding: 0px;
+    padding: 0;
     font-size: 18px;
-    border: 1px solid var(--border-color);
+    border: 0px solid var(--border-color);
     background-color: var(--bg-color);
     color: var(--text-color);
     resize: none; /* Prevent resizing */
