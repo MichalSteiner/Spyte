@@ -1,9 +1,27 @@
+/* Base Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
 }
 
+/* Root styles for themes */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --panel-bg-color: #f0f0f0;
+    --border-color: #cccccc;
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --panel-bg-color: #1e1e1e;
+    --border-color: #333333;
+}
+
+/* Main App Container */
 #app {
     display: flex;
     flex-direction: column;
@@ -12,6 +30,7 @@ body {
     color: var(--text-color);
 }
 
+/* Top Panel */
 #top-panel {
     display: flex;
     justify-content: space-between;
@@ -21,107 +40,14 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* Content Area */
 #content {
     display: flex;
     flex: 1;
     padding: 10px;
 }
 
-#japanese-text, #english-text {
-    position: relative;
-}
-
-/* Ensure both have similar margins and paddings */
-#japanese-text p {
-    margin: 0;
-    padding: 0;
-    font-size: 18px; /* Increase the font size to your preference */
-    margin-bottom: 20px; /* Add space between paragraphs */
-    line-height: 1.6; /* Adjust line height for better readability */
-    
-}
-
-#japanese-text p, #english-text textarea {
-    margin-bottom: 20px; /* Adjust this value to increase or decrease the offset */
-}
-
-/* Optional: Add some padding for better readability */
-#english-text textarea {
-    padding: 10px;
-}
-
-hr.paragraph-separator {
-    border: none;
-    border-top: 2px solid #000; /* Adjust the color and thickness as needed */
-    margin: 20px 0; /* Add space above and below the line */
-    width: 100vw; /* Full viewport width */
-    position: relative;
-    left: -50vw; /* Adjust positioning to span across all panels */
-}
-
-.text-box {
-    margin: 0;
-    padding: 0;
-    width: 90%; /* Ensure it doesn't overflow the panel */
-    box-sizing: border-box; /* Ensure padding doesn't affect width */
-}
-
-.panel {
-    flex: 1;
-    padding: 10px;
-    background-color: var(--panel-bg-color);
-    border: 1px solid var(--border-color);
-    margin: 0 5px;
-    overflow-y: auto;
-}
-
-#notes-panel {
-    flex: 0.5;
-}
-
-#comments {
-    padding: 10px;
-    background-color: var(--panel-bg-color);
-    border-top: 1px solid var(--border-color);
-}
-
-#comments-section {
-    padding: 10px;
-    border-top: 1px solid #ddd;
-}
-
-#comments-text {
-    width: 100%;
-    height: 100px;
-}
-
-textarea {
-    width: 100%;
-    height: 100px;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    resize: none;
-}
-
-/* Light Mode */
-:root {
-    --bg-color: #ffffff;
-    --text-color: #000000;
-    --panel-bg-color: #f0f0f0;
-    --border-color: #cccccc;
-}
-
-/* Dark Mode */
-body.dark-mode {
-    --bg-color: #121212;
-    --text-color: #e0e0e0;
-    --panel-bg-color: #1e1e1e;
-    --border-color: #333333;
-}
-
+/* Panels */
 .panel {
     flex: 1;
     padding: 10px;
@@ -129,8 +55,44 @@ body.dark-mode {
     border: 1px solid var(--border-color);
     margin: 0 5px;
     overflow-y: auto; /* Make panel scrollable */
-    height: calc(100vh - 200px); /* Adjust height as needed */
+    box-sizing: border-box; /* Include padding and border in width and height */
 }
+
+/* Specific Panels */
+#notes-panel {
+    flex: 0.5;
+}
+
+/* Text and Textareas */
+#japanese-text, #english-text {
+    position: relative;
+}
+
+#japanese-text p, #english-text textarea {
+    margin: 0;
+    padding: 0px;
+    font-size: 18px; /* Increase the font size */
+    line-height: 1.6; /* Ensure consistent line height */
+    box-sizing: border-box; /* Ensure padding and border are included in the height */
+}
+
+#english-text textarea {
+    width: 90%; /* Make sure textarea uses full width available */
+    padding: 0px;
+}
+
+/* Paragraph Separator */
+.paragraph-separator {
+    border: none;
+    border-top: 2px solid #000; /* Customize the color and thickness */
+    margin: 20px 0; /* Margin for spacing above and below the line */
+    width: 100vw; /* Full viewport width */
+    position: relative;
+    left: -50vw; /* Adjust positioning to span across all panels */
+    box-sizing: border-box; /* Ensure the width calculation includes padding and border */
+}
+
+/* Note Popup */
 #note-popup {
     position: absolute;
     background: white;
@@ -151,8 +113,6 @@ body.dark-mode {
     height: 50px;
 }
 
-
-
 #note-popup-header {
     display: flex;
     justify-content: flex-end;
@@ -165,6 +125,19 @@ body.dark-mode {
     cursor: pointer;
 }
 
+/* Buttons */
 button {
     margin-top: 10px;
+}
+
+/* Textarea Styles */
+textarea {
+    width: 90%;
+    height: 100px;
+    padding: 0px;
+    font-size: 18px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    resize: none; /* Prevent resizing */
 }

@@ -26,26 +26,31 @@ async function loadJapaneseText(filePath) {
                 engBox.value = engParagraphs[index];
             }
 
-            const paragraphHeight = jpParagraph.offsetHeight + 20; // Account for margin
-            engBox.style.height = `${paragraphHeight}px`;
-            englishTextDiv.appendChild(engBox);
+            // Ensure the textarea matches the height of the Japanese paragraph
+            // Use a fixed height for the textarea or set it after rendering
+            setTimeout(() => {
+                const paragraphHeight = jpParagraph.offsetHeight - 4; // Ensure this is correct
+                engBox.style.height = `${paragraphHeight}px`;
+            }, 0);
+            
 
-            const line = document.createElement('div');
-            line.className = 'line';
-            line.style.top = `${jpParagraph.offsetTop}px`;
-            line.style.height = `${jpParagraph.offsetHeight}px`;
-            document.getElementById('english-panel').appendChild(line);
+            englishTextDiv.appendChild(engBox);
 
             // Add the horizontal line across all panels
             const hr = document.createElement('hr');
             hr.className = 'paragraph-separator';
             japaneseTextDiv.appendChild(hr);
-            englishTextDiv.appendChild(hr.cloneNode()); // Clone to add the same HR in the English panel
+
+            // Clone and append horizontal line to English panel
+            const hrClone = hr.cloneNode();
+            englishTextDiv.appendChild(hrClone);
         });
     } catch (err) {
         console.error('Failed to load text:', err);
     }
 }
+
+
 
 window.addEventListener('DOMContentLoaded', () => {
     // Theme toggle logic
