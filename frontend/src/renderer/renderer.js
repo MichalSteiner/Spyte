@@ -3,36 +3,37 @@ const { ipcRenderer } = require('electron');
 // Update the loadJapaneseText function to accept the file content directly
 async function loadJapaneseText(filePath) {
     try {
-        const content = await ipcRenderer.invoke('load-text-file', filePath);
+        const { japaneseContent, englishContent } = await ipcRenderer.invoke('load-text-file', filePath);
         const japaneseTextDiv = document.getElementById('japanese-text');
         const englishTextDiv = document.getElementById('english-text');
 
-        // Split content by paragraphs
-        const paragraphs = content.split('\n\n'); // Adjust based on paragraph separator
+        const jpParagraphs = japaneseContent.split('\n\n');
+        const engParagraphs = englishContent ? englishContent.split('\n\n') : [];
 
-        // Clear previous content
         japaneseTextDiv.innerHTML = '';
         englishTextDiv.innerHTML = '';
 
-        paragraphs.forEach((paragraph, index) => {
-            // Create Japanese text element
+        jpParagraphs.forEach((paragraph, index) => {
             const jpParagraph = document.createElement('p');
             jpParagraph.textContent = paragraph;
             japaneseTextDiv.appendChild(jpParagraph);
 
-            // Create English text box
             const engBox = document.createElement('textarea');
             engBox.className = 'text-box';
             engBox.placeholder = 'Enter translation here...';
-            
-            // Match the height exactly, including any offsets
-            engBox.style.height = `${jpParagraph.offsetHeight}px`;
+
+            if (engParagraphs[index]) {
+                engBox.value = engParagraphs[index];
+            }
+
+            // Adjusting height considering margin or padding
+            const paragraphHeight = jpParagraph.offsetHeight + 20; // Add the same margin as defined in CSS
+            engBox.style.height = `${paragraphHeight}px`;
             englishTextDiv.appendChild(engBox);
 
-            // Adjust the line to match the offset position
             const line = document.createElement('div');
             line.className = 'line';
-            line.style.top = `${jpParagraph.offsetTop}px`; // Align with Japanese text
+            line.style.top = `${jpParagraph.offsetTop}px`;
             line.style.height = `${jpParagraph.offsetHeight}px`;
             document.getElementById('english-panel').appendChild(line);
         });

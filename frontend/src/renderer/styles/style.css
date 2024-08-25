@@ -37,6 +37,15 @@ body {
     padding: 0;
 }
 
+#japanese-text p, #english-text textarea {
+    margin-bottom: 20px; /* Adjust this value to increase or decrease the offset */
+}
+
+/* Optional: Add some padding for better readability */
+#english-text textarea {
+    padding: 10px;
+}
+
 .text-box {
     margin: 0;
     padding: 0;

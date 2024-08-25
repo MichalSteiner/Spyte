@@ -38,11 +38,25 @@ function createWindow() {
     // Handle loading of text files
     ipcMain.handle('load-text-file', async (event, filePath) => {
         try {
+            // Load Japanese content
             const content = fs.readFileSync(filePath, 'utf-8');
-            return content;
+    
+            // Construct the path for the corresponding English translation
+            const parsedPath = path.parse(filePath);
+            const englishFilePath = path.join(parsedPath.dir, '..', 'english', parsedPath.base);
+    
+            let englishContent = null;
+    
+            // Check if the English translation file exists
+            if (fs.existsSync(englishFilePath)) {
+                englishContent = fs.readFileSync(englishFilePath, 'utf-8');
+            }
+    
+            // Return both Japanese and English content
+            return { japaneseContent: content, englishContent };
         } catch (err) {
             console.error('Failed to read file:', err);
-            return '';
+            return { japaneseContent: '', englishContent: null };
         }
     });
 
