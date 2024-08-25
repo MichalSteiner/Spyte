@@ -26,8 +26,7 @@ async function loadJapaneseText(filePath) {
                 engBox.value = engParagraphs[index];
             }
 
-            // Adjusting height considering margin or padding
-            const paragraphHeight = jpParagraph.offsetHeight + 20; // Add the same margin as defined in CSS
+            const paragraphHeight = jpParagraph.offsetHeight + 20; // Account for margin
             engBox.style.height = `${paragraphHeight}px`;
             englishTextDiv.appendChild(engBox);
 
@@ -36,6 +35,12 @@ async function loadJapaneseText(filePath) {
             line.style.top = `${jpParagraph.offsetTop}px`;
             line.style.height = `${jpParagraph.offsetHeight}px`;
             document.getElementById('english-panel').appendChild(line);
+
+            // Add the horizontal line across all panels
+            const hr = document.createElement('hr');
+            hr.className = 'paragraph-separator';
+            japaneseTextDiv.appendChild(hr);
+            englishTextDiv.appendChild(hr.cloneNode()); // Clone to add the same HR in the English panel
         });
     } catch (err) {
         console.error('Failed to load text:', err);

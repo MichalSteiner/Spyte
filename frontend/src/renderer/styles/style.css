@@ -35,6 +35,10 @@ body {
 #japanese-text p {
     margin: 0;
     padding: 0;
+    font-size: 18px; /* Increase the font size to your preference */
+    margin-bottom: 20px; /* Add space between paragraphs */
+    line-height: 1.6; /* Adjust line height for better readability */
+    
 }
 
 #japanese-text p, #english-text textarea {
@@ -44,6 +48,15 @@ body {
 /* Optional: Add some padding for better readability */
 #english-text textarea {
     padding: 10px;
+}
+
+hr.paragraph-separator {
+    border: none;
+    border-top: 2px solid #000; /* Adjust the color and thickness as needed */
+    margin: 20px 0; /* Add space above and below the line */
+    width: 100vw; /* Full viewport width */
+    position: relative;
+    left: -50vw; /* Adjust positioning to span across all panels */
 }
 
 .text-box {
