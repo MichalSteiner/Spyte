@@ -129,8 +129,7 @@ def sanitize_filename(filename: str) -> str:
     """
     return "".join(c for c in filename if c.isalnum() or c in "._- ").rstrip()
 
-def download_novel(novel_url: str,
-                   output_dir: str) -> None:
+def download_novel(novel_url: str) -> None:
     """
     Download all chapters for single novel from Syosetu, given the main link.
     
@@ -140,20 +139,17 @@ def download_novel(novel_url: str,
     ----------
     novel_url : str
         Link to the main page of the novel.
-    output_dir : str
-        Output directory where to save the novel.
         
     TODO:
         Change the saving to output it in separate chapters.
     """
     # Get the novel title for directory name
     novel_title = get_novel_title(novel_url)
-    output_dir = os.path.join('shared/novels', output_dir)
-    novel_dir = os.path.join(output_dir, sanitize_filename(novel_title))
+    novel_dir = os.path.join('shared/novels', sanitize_filename(novel_title))
     # Create english translation directory
     os.makedirs(novel_dir + '/english', exist_ok=True)
     
-    novel_dir = os.path.join(novel_dir, '/raw')
+    novel_dir = os.path.join(novel_dir, 'raw')
     # Create the directory if it doesn't exist
     os.makedirs(novel_dir, exist_ok=True)
 
@@ -172,5 +168,7 @@ def download_novel(novel_url: str,
 
 if __name__ == '__main__': # Test on a singular novel.
     novel_url = "https://ncode.syosetu.com/n7505bx/"  # Replace with the actual novel URL
-    output_directory = "test_novel"
-    download_novel(novel_url, output_directory)
+    download_novel(novel_url)
+    
+    novel_url_2 = "https://ncode.syosetu.com/n9418eg/"
+    download_novel(novel_url_2)

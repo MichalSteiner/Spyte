@@ -31,6 +31,19 @@ body {
     position: relative;
 }
 
+/* Ensure both have similar margins and paddings */
+#japanese-text p {
+    margin: 0;
+    padding: 0;
+}
+
+.text-box {
+    margin: 0;
+    padding: 0;
+    width: 90%; /* Ensure it doesn't overflow the panel */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
 .panel {
     flex: 1;
     padding: 10px;
@@ -95,4 +108,41 @@ body.dark-mode {
     margin: 0 5px;
     overflow-y: auto; /* Make panel scrollable */
     height: calc(100vh - 200px); /* Adjust height as needed */
+}
+#note-popup {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+.dark-mode #note-popup {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+#note-text {
+    width: 200px;
+    height: 50px;
+}
+
+
+
+#note-popup-header {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#note-popup-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+button {
+    margin-top: 10px;
 }

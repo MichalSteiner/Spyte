@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,11 +10,32 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'renderer.js'),
             nodeIntegration: true,  // Enable Node integration if needed
+            enableRemoteModule: false,
             contextIsolation: false // Disable context isolation if Node integration is enabled
         }
     });
 
-    // Handle request from renderer to load text file
+    // Handle text file selection
+    ipcMain.handle('select-file', async (event, lastDirectory) => {
+        const defaultDirectory = lastDirectory || path.join(__dirname, '../shared/novels');
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            defaultPath: defaultDirectory,
+            filters: [
+                { name: 'Text Files', extensions: ['txt'] },
+                { name: 'All Files', extensions: ['*'] },
+            ],
+        });
+
+        if (!result.canceled) {
+            const selectedPath = result.filePaths[0];
+            return selectedPath;
+        }
+
+        return { filePath: null};
+    });
+
+    // Handle loading of text files
     ipcMain.handle('load-text-file', async (event, filePath) => {
         try {
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -25,12 +46,22 @@ function createWindow() {
         }
     });
 
-    ipcMain.handle('save-translations', async (event, translations) => {
-        const filePath = path.join(__dirname, 'translations.txt');
+    ipcMain.handle('save-translations', async (event, translations, originalFilePath) => {
+        const parsedPath = path.parse(originalFilePath);
+        const novelBaseDir = path.join(parsedPath.dir, '..', 'english'); // Navigate to the 'english' folder
+        const savePath = path.join(novelBaseDir, parsedPath.base); // Save with the same filename
+    
+        // Ensure the target directory exists
+        if (!fs.existsSync(novelBaseDir)) {
+            fs.mkdirSync(novelBaseDir, { recursive: true });
+        }
+    
         try {
-            fs.writeFileSync(filePath, translations.join('\n\n'), 'utf-8');
+            fs.writeFileSync(savePath, translations.join('\n\n'), 'utf-8');
+            return { canceled: false, filePath: savePath };
         } catch (err) {
-            console.error('Failed to save translations:', err);
+            console.error('Failed to save file:', err);
+            return { canceled: true };
         }
     });
 
