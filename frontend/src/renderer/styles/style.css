@@ -31,6 +31,11 @@ body.dark-mode {
     --text-color-dark: #ffffff; /* Text color for dark mode */
 }
 
+html, body {
+    background-color: #121212; /* Ensures the background color applies to the entire document */
+    height: 100%;
+}
+
 /* Main App Container */
 #app {
     display: flex;

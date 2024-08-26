@@ -92,111 +92,6 @@ function focusNextElement(currentElement) {
     }
 }
 
-
-// Create a textarea from a paragraph
-function createTextareaFromParagraph(container, paragraph) {
-    const textarea = document.createElement('textarea');
-    textarea.className = 'text-box';
-    textarea.style.height = paragraph.style.height; // Maintain height
-    textarea.value = paragraph.textContent;
-
-    // Replace paragraph with textarea
-    container.replaceChild(textarea, paragraph);
-
-    // Remove the old button if exists
-    const oldButton = container.querySelector('.edit-button');
-    if (oldButton) oldButton.remove();
-
-    // Attach the Edit button
-    appendEditButton(container, textarea);
-    // Focus on the textarea for editing
-    textarea.focus();
-}
-
-// Save content from textarea and switch back to paragraph
-function saveTextareaContent(container, textarea) {
-    const paragraph = document.createElement('p');
-    paragraph.textContent = textarea.value;
-
-    // Replace the textarea with paragraph
-    container.replaceChild(paragraph, textarea);
-
-    // Remove the old button if exists
-    const oldButton = container.querySelector('.edit-button');
-    if (oldButton) oldButton.remove();
-
-    // Reattach the Edit button
-    appendEditButton(container, paragraph);
-}
-
-// Append the Edit button to the container
-function appendEditButton(container, contentElement) {
-    // Select Edit button
-    let editButton = container.querySelector('.edit-button');
-
-    // If Edit button does not exist, create it.
-    if (!editButton) {
-        editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
-        editButton.className = 'edit-button';
-
-        editButton.setAttribute('tabindex', '-1');
-
-
-        editButton.onclick = () => {
-            if (contentElement.tagName === 'P') {
-                createTextareaFromParagraph(container, contentElement);
-            } else if (contentElement.tagName === 'TEXTAREA') {
-                saveTextareaContent(container, contentElement);
-            }
-        };
-
-        // Position the button
-        editButton.style.position = 'absolute';
-        editButton.style.right = '10px'; // Adjust as needed
-        editButton.style.top = '0';
-        editButton.style.margin = '5px';
-        editButton.onclick = () => {
-            createTextareaFromParagraph(container, paragraph);
-        };
-        container.appendChild(editButton);
-        console.log('Appended button from appendEditButton')
-    } else {
-        console.log('No button appended in appendEditButton, already exists')
-    }
-
-    // // Toggle button visibility based on whether the content element is a paragraph
-    // if (contentElement.tagName === 'P') {
-    //     editButton.style.display = 'block';
-    // } else {
-    //     editButton.style.display = 'none';
-    // }
-}
-
-
-// Save content from textarea and switch back to paragraph
-function saveTextareaContent(container, textarea) {
-    const paragraph = document.createElement('p');
-    paragraph.textContent = textarea.value;
-
-    // Remove the textarea and reattach the Edit button
-    container.replaceChild(paragraph, textarea);
-
-    // Reattach the Edit button if it doesn't exist
-    const existingEditButton = container.querySelector('.edit-button');
-    if (!existingEditButton) {
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
-        editButton.className = 'edit-button';
-        container.appendChild(editButton);
-        console.log('Created button')
-    } else {
-        console.log('Button existing, not re-created ')
-    }
-}
-
-
-
 // Synchronize the height of paragraphs between Japanese and English panels
 async function synchronizeParagraphs() {
     const japaneseTextDiv = document.getElementById('japanese-text');
@@ -285,44 +180,59 @@ function getTranslations() {
 }
 
 // Function to handle the edit button functionality
-function handleEditButtonClick(button) {
-    const paragraph = button.closest('p');
-    const index = Array.from(paragraph.parentNode.children).indexOf(paragraph);
-    const textArea = document.createElement('textarea');
-    
-    textArea.value = paragraph.textContent;
-    textArea.className = 'text-box';
-    textArea.style.width = 'calc(100% - 50px)'; // Adjust width to accommodate button
-    textArea.style.height = `${paragraph.offsetHeight}px`;
-    
-    const editButton = paragraph.nextElementSibling;
-    if (editButton && editButton.tagName === 'BUTTON') {
-        editButton.remove();
+function handleEditButtonClick(event) {
+    const container = event.target.parentElement;
+    const contentElement = container.querySelector('p, textarea');
+
+    if (contentElement.tagName === 'P') {
+        // Change paragraph to textarea
+        createTextareaFromParagraph(container, contentElement);
+    } else if (contentElement.tagName === 'TEXTAREA') {
+        // Do nothing since it's already a textarea
     }
+}
 
-    paragraph.replaceWith(textArea);
+// Create a textarea from a paragraph
+function createTextareaFromParagraph(container, paragraph) {
+    const textarea = document.createElement('textarea');
+    textarea.className = 'text-box';
+    textarea.style.height = paragraph.style.height; 
+    textarea.value = paragraph.textContent;
 
-    // Add event listener to save the changes when Enter is pressed
-    textArea.addEventListener('keypress', (event) => {
+    // Replace paragraph with textarea
+    container.replaceChild(textarea, paragraph);
+
+    // Focus on the textarea for editing
+    textarea.focus();
+
+    // Add "Enter" key listener to save the content
+    textarea.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
-            event.preventDefault();
-            textArea2paragraph(textArea, index);
+            saveTextareaContent(textarea);
         }
     });
 }
 
-// Function to save the edited translation
-function textArea2paragraph(textArea, index) {
+// Save content from textarea and switch back to paragraph
+function saveTextareaContent(textarea) {
     const paragraph = document.createElement('p');
-    paragraph.textContent = textArea.value;
+    paragraph.textContent = textarea.value;
 
+    const container = textarea.parentElement;
+
+    // Replace the textarea with paragraph
+    container.replaceChild(paragraph, textarea);
+}
+
+// Append the Edit button to the container
+function appendEditButton(container, contentElement) {
     const editButton = document.createElement('button');
     editButton.textContent = 'Edit';
     editButton.className = 'edit-button';
-    editButton.addEventListener('click', () => handleEditButtonClick(editButton));
 
-    textArea.replaceWith(paragraph);
-    paragraph.appendChild(editButton);
+    editButton.onclick = handleEditButtonClick;
+
+    container.appendChild(editButton);
 }
 
 // Event listener for save button
