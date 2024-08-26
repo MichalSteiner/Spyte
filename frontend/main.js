@@ -65,6 +65,8 @@ function createWindow() {
         const novelBaseDir = path.join(parsedPath.dir, '..', 'english'); // Navigate to the 'english' folder
         const savePath = path.join(novelBaseDir, parsedPath.base); // Save with the same filename
     
+        console.log('Saving to:', savePath)
+        console.log('Translations:', translations)
         // Ensure the target directory exists
         if (!fs.existsSync(novelBaseDir)) {
             fs.mkdirSync(novelBaseDir, { recursive: true });
@@ -72,6 +74,7 @@ function createWindow() {
     
         try {
             fs.writeFileSync(savePath, translations.join('\n\n'), 'utf-8');
+            console.log('Saved to file', savePath)
             return { canceled: false, filePath: savePath };
         } catch (err) {
             console.error('Failed to save file:', err);

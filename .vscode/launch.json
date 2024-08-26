@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Electron: Main",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/.bin/electron",
+            "args": ["."],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "npm: start",
+            "runtimeExecutable": null,
+            "windows": {
+                "program": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+            },
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Electron: Renderer",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000", // Adjust according to your app's URL
+            "webRoot": "${workspaceFolder}",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "sourceMaps": true,
+            "preLaunchTask": "npm: start",
+            "stopOnEntry": false
+        }
+    ]
+}

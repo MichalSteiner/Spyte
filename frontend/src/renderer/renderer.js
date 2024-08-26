@@ -1,55 +1,203 @@
 const { ipcRenderer } = require('electron');
+const fs = require('fs');
+const path = require('path');
 
-// Update the loadJapaneseText function to accept the file content directly
+// Load Japanese and English text from file
 async function loadJapaneseText(filePath) {
     try {
+        // Load Japanese and English text
         const { japaneseContent, englishContent } = await ipcRenderer.invoke('load-text-file', filePath);
         const japaneseTextDiv = document.getElementById('japanese-text');
         const englishTextDiv = document.getElementById('english-text');
 
+        // Divide text into paragraphs
         const jpParagraphs = japaneseContent.split('\n\n');
         const engParagraphs = englishContent ? englishContent.split('\n\n') : [];
 
+        // Remove all child element and text in them. Reseting the values.
         japaneseTextDiv.innerHTML = '';
         englishTextDiv.innerHTML = '';
 
+        // Create a paragraph for each paragraph in the Japanese text
         jpParagraphs.forEach((paragraph, index) => {
             const jpParagraph = document.createElement('p');
             jpParagraph.textContent = paragraph;
             japaneseTextDiv.appendChild(jpParagraph);
 
-            const engBox = document.createElement('textarea');
-            engBox.className = 'text-box';
-            engBox.placeholder = 'Enter translation here...';
+            const container = document.createElement('div');
+            container.className = 'paragraph-container';
 
+            let engElement;
+
+
+            // If English translation already exists
             if (engParagraphs[index]) {
-                engBox.value = engParagraphs[index];
+                engElement = document.createElement('p');
+                engElement.textContent = engParagraphs[index];
+                container.appendChild(engElement);
+            } else { 
+                engElement = document.createElement('textarea');
+                engElement.className = 'text-box';
+                engElement.placeholder = 'Enter translation here...';
+                container.appendChild(engElement);
             }
 
-            // Ensure the textarea matches the height of the Japanese paragraph
-            // Use a fixed height for the textarea or set it after rendering
+            // Attach the Edit button
+            appendEditButton(container, engElement);
+
+            // Immediately set paragraph height of english translation to corresponding JP paragraph
             setTimeout(() => {
-                const paragraphHeight = jpParagraph.offsetHeight; // Ensure this is correct
-                engBox.style.height = `${paragraphHeight}px`;
+                const paragraphHeight = jpParagraph.offsetHeight;
+                engElement.style.height = `${paragraphHeight}px`;
+                engElement.offsetHeight = jpParagraph.offsetHeight;
             }, 0);
-            
 
-            englishTextDiv.appendChild(engBox);
+            englishTextDiv.appendChild(container);
 
-            // Add the horizontal line across all panels
             const hr = document.createElement('hr');
             hr.className = 'paragraph-separator';
             japaneseTextDiv.appendChild(hr);
 
-            // Clone and append horizontal line to English panel
             const hrClone = hr.cloneNode();
             englishTextDiv.appendChild(hrClone);
         });
+
+        // Handle Enter key press for saving edits
+        document.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'TEXTAREA') {
+                    const container = activeElement.parentElement;
+                    saveTextareaContent(container, activeElement);
+                    focusNextElement(activeElement);
+                }
+            }
+        });
+
     } catch (err) {
         console.error('Failed to load text:', err);
     }
 }
 
+function focusNextElement(currentElement) {
+    const focusableElements = document.querySelectorAll(
+        'a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])'
+    );
+    const focusArray = Array.prototype.slice.call(focusableElements);
+    const currentIndex = focusArray.indexOf(currentElement);
+    
+    // If there's a next focusable element, focus on it
+    if (currentIndex > -1 && currentIndex < focusArray.length - 1) {
+        focusArray[currentIndex + 2].focus();
+    }
+}
+
+
+// Create a textarea from a paragraph
+function createTextareaFromParagraph(container, paragraph) {
+    const textarea = document.createElement('textarea');
+    textarea.className = 'text-box';
+    textarea.style.height = paragraph.style.height; // Maintain height
+    textarea.value = paragraph.textContent;
+
+    // Replace paragraph with textarea
+    container.replaceChild(textarea, paragraph);
+
+    // Remove the old button if exists
+    const oldButton = container.querySelector('.edit-button');
+    if (oldButton) oldButton.remove();
+
+    // Attach the Edit button
+    appendEditButton(container, textarea);
+    // Focus on the textarea for editing
+    textarea.focus();
+}
+
+// Save content from textarea and switch back to paragraph
+function saveTextareaContent(container, textarea) {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = textarea.value;
+
+    // Replace the textarea with paragraph
+    container.replaceChild(paragraph, textarea);
+
+    // Remove the old button if exists
+    const oldButton = container.querySelector('.edit-button');
+    if (oldButton) oldButton.remove();
+
+    // Reattach the Edit button
+    appendEditButton(container, paragraph);
+}
+
+// Append the Edit button to the container
+function appendEditButton(container, contentElement) {
+    // Select Edit button
+    let editButton = container.querySelector('.edit-button');
+
+    // If Edit button does not exist, create it.
+    if (!editButton) {
+        editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.className = 'edit-button';
+
+        editButton.setAttribute('tabindex', '-1');
+
+
+        editButton.onclick = () => {
+            if (contentElement.tagName === 'P') {
+                createTextareaFromParagraph(container, contentElement);
+            } else if (contentElement.tagName === 'TEXTAREA') {
+                saveTextareaContent(container, contentElement);
+            }
+        };
+
+        // Position the button
+        editButton.style.position = 'absolute';
+        editButton.style.right = '10px'; // Adjust as needed
+        editButton.style.top = '0';
+        editButton.style.margin = '5px';
+        editButton.onclick = () => {
+            createTextareaFromParagraph(container, paragraph);
+        };
+        container.appendChild(editButton);
+        console.log('Appended button from appendEditButton')
+    } else {
+        console.log('No button appended in appendEditButton, already exists')
+    }
+
+    // // Toggle button visibility based on whether the content element is a paragraph
+    // if (contentElement.tagName === 'P') {
+    //     editButton.style.display = 'block';
+    // } else {
+    //     editButton.style.display = 'none';
+    // }
+}
+
+
+// Save content from textarea and switch back to paragraph
+function saveTextareaContent(container, textarea) {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = textarea.value;
+
+    // Remove the textarea and reattach the Edit button
+    container.replaceChild(paragraph, textarea);
+
+    // Reattach the Edit button if it doesn't exist
+    const existingEditButton = container.querySelector('.edit-button');
+    if (!existingEditButton) {
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.className = 'edit-button';
+        container.appendChild(editButton);
+        console.log('Created button')
+    } else {
+        console.log('Button existing, not re-created ')
+    }
+}
+
+
+
+// Synchronize the height of paragraphs between Japanese and English panels
 async function synchronizeParagraphs() {
     const japaneseTextDiv = document.getElementById('japanese-text');
     const englishTextDiv = document.getElementById('english-text');
@@ -65,7 +213,7 @@ async function synchronizeParagraphs() {
     });
 }
 
-
+// Save note with footnotes and highlighted words
 async function saveNoteWithFootnotesAndHighlights(originalFilePath, noteText, paragraphIndex, highlightedWords) {
     try {
         const { japaneseContent } = await ipcRenderer.invoke('load-text-file', originalFilePath);
@@ -73,18 +221,13 @@ async function saveNoteWithFootnotesAndHighlights(originalFilePath, noteText, pa
         let jpParagraphs = japaneseContent.split('\n\n');
         const footnoteMarker = `[${paragraphIndex + 1}]`;
 
-        // Append footnote marker to the relevant paragraph
         jpParagraphs[paragraphIndex] += ` ${footnoteMarker}`;
-
-        // Append footnote text to the end of the document
         jpParagraphs.push(`${footnoteMarker} ${noteText}`);
 
-        // Modify the paragraph to include highlighted markers (e.g., wrap with **)
         highlightedWords.forEach(word => {
             jpParagraphs[paragraphIndex] = jpParagraphs[paragraphIndex].replace(word, `**${word}**`);
         });
 
-        // Save the modified Japanese content back to the file
         const newContent = jpParagraphs.join('\n\n');
         fs.writeFileSync(originalFilePath, newContent, 'utf-8');
 
@@ -94,12 +237,12 @@ async function saveNoteWithFootnotesAndHighlights(originalFilePath, noteText, pa
     }
 }
 
+// Save notes to a separate file
 async function saveNotesToFile(noteText, paragraphIndex) {
     try {
         const notesFilePath = path.join(path.dirname(originalFilePath), 'notes.txt');
         const noteEntry = `Paragraph ${paragraphIndex + 1}:\n${noteText}\n\n`;
 
-        // Append to the notes file
         fs.appendFileSync(notesFilePath, noteEntry, 'utf-8');
 
         console.log('Notes saved successfully to:', notesFilePath);
@@ -108,53 +251,123 @@ async function saveNotesToFile(noteText, paragraphIndex) {
     }
 }
 
+// Function to trigger the click event of the save button
+function triggerSaveButton() {
+    const saveButton = document.getElementById('save-button');
+    if (saveButton) {
+        saveButton.click();
+    }
+}
 
+// Add an event listener for key presses
+window.addEventListener('keydown', (event) => {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault(); // Prevent the default browser save action
+        triggerSaveButton();
+    }
+});
+
+// Function to gather translations from both text areas and paragraphs
+function getTranslations() {
+    const englishTextDiv = document.getElementById('english-text');
+    const allDivs = Array.from(englishTextDiv.children);
+    return allDivs.map(child => {
+        const firstChild = child.children[0];
+        if (firstChild) {
+            if (firstChild.tagName.toLowerCase() === 'textarea') {
+                return firstChild.value;
+            } else if (firstChild.tagName.toLowerCase() === 'p') {
+                return firstChild.textContent;
+            }
+        }
+        return null; // Default case for unexpected elements or if firstChild is undefined
+    }).filter(value => value !== null); // Filtering nulls from the array.
+}
+
+// Function to handle the edit button functionality
+function handleEditButtonClick(button) {
+    const paragraph = button.closest('p');
+    const index = Array.from(paragraph.parentNode.children).indexOf(paragraph);
+    const textArea = document.createElement('textarea');
+    
+    textArea.value = paragraph.textContent;
+    textArea.className = 'text-box';
+    textArea.style.width = 'calc(100% - 50px)'; // Adjust width to accommodate button
+    textArea.style.height = `${paragraph.offsetHeight}px`;
+    
+    const editButton = paragraph.nextElementSibling;
+    if (editButton && editButton.tagName === 'BUTTON') {
+        editButton.remove();
+    }
+
+    paragraph.replaceWith(textArea);
+
+    // Add event listener to save the changes when Enter is pressed
+    textArea.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            textArea2paragraph(textArea, index);
+        }
+    });
+}
+
+// Function to save the edited translation
+function textArea2paragraph(textArea, index) {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = textArea.value;
+
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.className = 'edit-button';
+    editButton.addEventListener('click', () => handleEditButtonClick(editButton));
+
+    textArea.replaceWith(paragraph);
+    paragraph.appendChild(editButton);
+}
+
+// Event listener for save button
+document.getElementById('save-button').addEventListener('click', async () => {
+    const translations = getTranslations();
+    await ipcRenderer.invoke('save-translations', translations, originalFilePath);
+});
+
+
+
+// Initialize the application
 window.addEventListener('DOMContentLoaded', () => {
-    // Theme toggle logic
     const themeToggle = document.getElementById('theme-toggle');
     const body = document.body;
+    const saveButton = document.getElementById('save-button');
+    const japanesePanel = document.getElementById('japanese-panel');
+    const englishPanel = document.getElementById('english-panel');
+    const notesPanel = document.getElementById('notes-panel');
+    let originalFilePath = ''; // Store the path of the loaded file
+    let selectedParagraphIndex = null; // To store which paragraph is selected
+    let highlightedWords = []; // To store highlighted words
 
-    // Check if the user has a saved preference for dark mode
+    // Theme toggle logic
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         body.classList.add('dark-mode');
     }
 
-    // Toggle between light and dark mode
     themeToggle.addEventListener('click', () => {
         body.classList.toggle('dark-mode');
-
-        // Save the user's preference in localStorage
-        if (body.classList.contains('dark-mode')) {
-            localStorage.setItem('theme', 'dark');
-        } else {
-            localStorage.setItem('theme', 'light');
-        }
+        localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
     });
 
     // Scroll synchronization logic
-    const japanesePanel = document.getElementById('japanese-panel');
-    const englishPanel = document.getElementById('english-panel');
-    const notesPanel = document.getElementById('notes-panel');
-
     function syncScroll(source, targets) {
         const scrollPercentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
-
         targets.forEach(target => {
             target.scrollTop = scrollPercentage * (target.scrollHeight - target.clientHeight);
         });
     }
 
-    japanesePanel.addEventListener('scroll', () => {
-        syncScroll(japanesePanel, [englishPanel, notesPanel]);
-    });
-
-    englishPanel.addEventListener('scroll', () => {
-        syncScroll(englishPanel, [japanesePanel, notesPanel]);
-    });
-
-    notesPanel.addEventListener('scroll', () => {
-        syncScroll(notesPanel, [japanesePanel, englishPanel]);
+    [japanesePanel, englishPanel, notesPanel].forEach(panel => {
+        panel.addEventListener('scroll', () => {
+            syncScroll(panel, [japanesePanel, englishPanel, notesPanel].filter(p => p !== panel));
+        });
     });
 
     // Handle file selection
@@ -162,21 +375,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const filePath = await ipcRenderer.invoke('select-file');
         originalFilePath = filePath; // Store the original file path
         if (filePath) {
-            loadJapaneseText(filePath).then(() => {
-                synchronizeParagraphs();
-            });
-            
+            await loadJapaneseText(filePath);
+            synchronizeParagraphs();
         }
     });
 
-    let originalFilePath = ''; // Store the path of the loaded file
-    const saveButton = document.getElementById('save-button');
-
-    // Save translations with the original file path
+    // Save translations
     saveButton.addEventListener('click', async () => {
-        const textBoxes = document.querySelectorAll('#english-text textarea');
-        const translations = Array.from(textBoxes).map(textBox => textBox.value);
-
+        const translations = getTranslations();
         await ipcRenderer.invoke('save-translations', translations, originalFilePath);
     });
 
@@ -185,38 +391,20 @@ window.addEventListener('DOMContentLoaded', () => {
     notePopup.id = 'note-popup';
     notePopup.style.display = 'none'; // Hide by default
     notePopup.innerHTML = `
-    <div id="note-popup-header">
-        <button id="note-popup-close" title="Close">×</button>
-    </div>
-    <textarea id="note-text" placeholder="Enter note..."></textarea>
-    <button id="confirm-note">Confirm</button>
-`;
-document.body.appendChild(notePopup);
+        <div id="note-popup-header">
+            <button id="note-popup-close" title="Close">×</button>
+        </div>
+        <textarea id="note-text" placeholder="Enter note..."></textarea>
+        <button id="confirm-note">Confirm</button>
+    `;
+    document.body.appendChild(notePopup);
 
-    let selectedParagraphIndex = null; // To store which paragraph is selected
-    let highlightedWords = [];
-
-    japanesePanel.addEventListener('mouseup', (event) => {
-        const selection = window.getSelection();
-        const selectedText = selection.toString().trim();
-    
-        if (selectedText) {
-            const range = selection.getRangeAt(0);
-            const parentParagraph = range.startContainer.parentElement;
-            selectedParagraphIndex = Array.from(japanesePanel.children).indexOf(parentParagraph);
-    
-            highlightedWords.push(selectedText); // Add highlighted word to the array
-    
-            const { top, left } = parentParagraph.getBoundingClientRect();
-            notePopup.style.top = `${top + window.scrollY + 20}px`;
-            notePopup.style.left = `${left + window.scrollX}px`;
-            notePopup.style.display = 'block';
-    
-            document.getElementById('note-text').focus();
-        }
+    // Handle note popup actions
+    document.getElementById('note-popup-close').addEventListener('click', () => {
+        notePopup.style.display = 'none';
+        document.getElementById('note-text').value = ''; // Clear text
     });
-    
-    // Confirm note on button click or Enter key press
+
     document.getElementById('confirm-note').addEventListener('click', saveNote);
     document.getElementById('note-text').addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
@@ -224,62 +412,61 @@ document.body.appendChild(notePopup);
         }
     });
 
-    // Close note popup without saving
-    document.getElementById('note-popup-close').addEventListener('click', () => {
-        document.getElementById('note-popup').style.display = 'none';
+    window.addEventListener('click', (event) => {
+        if (event.target === notePopup) {
+            notePopup.style.display = 'none';
+            document.getElementById('note-text').value = ''; // Clear text
+        }
     });
 
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            notePopup.style.display = 'none';
+            document.getElementById('note-text').value = ''; // Clear text
+        }
+    });
 
+    // Handle selection and highlighting
+    japanesePanel.addEventListener('mouseup', (event) => {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+
+        if (selectedText) {
+            const range = selection.getRangeAt(0);
+            const parentParagraph = range.startContainer.parentElement;
+            selectedParagraphIndex = Array.from(japanesePanel.children).indexOf(parentParagraph);
+            highlightedWords.push(selectedText);
+
+            const { top, left } = parentParagraph.getBoundingClientRect();
+            notePopup.style.top = `${top + window.scrollY + 20}px`;
+            notePopup.style.left = `${left + window.scrollX}px`;
+            notePopup.style.display = 'block';
+            document.getElementById('note-text').focus();
+        }
+    });
+
+    // Save note function
     function saveNote() {
         const noteText = document.getElementById('note-text').value.trim();
-    
+
         if (noteText && selectedParagraphIndex !== null) {
-            // Ensure the corresponding paragraph in the Notes panel is targeted
             let noteContainer = notesPanel.children[selectedParagraphIndex];
             if (!noteContainer) {
                 noteContainer = document.createElement('div');
                 notesPanel.appendChild(noteContainer);
             }
-    
+
             const notePara = document.createElement('p');
             notePara.textContent = noteText;
             noteContainer.appendChild(notePara);
-    
-            // Save the note with highlights and to a separate file
+
             saveNoteWithFootnotesAndHighlights(originalFilePath, noteText, selectedParagraphIndex, highlightedWords);
             saveNotesToFile(noteText, selectedParagraphIndex);
-    
-            // Clear and hide the popup
+
             document.getElementById('note-text').value = '';
             notePopup.style.display = 'none';
-    
-            // Clear highlighted words after saving
-            highlightedWords = [];
+
+            highlightedWords = []; // Clear highlighted words
         }
     }
-    
-    
-    // Bind the saveNote function to the confirm button
-    document.getElementById('confirm-note').addEventListener('click', saveNote);
-    
-    // Close the popup without saving when clicking the cross button
-    document.getElementById('note-popup-close').addEventListener('click', () => {
-        document.getElementById('note-text').value = ''; // Clear text
-        notePopup.style.display = 'none'; // Hide popup
-    });
-    
-    // Also close the popup when clicking outside of it, or pressing the Escape key
-    window.addEventListener('click', (event) => {
-        if (event.target === notePopup) {
-            document.getElementById('note-text').value = ''; // Clear text
-            notePopup.style.display = 'none'; // Hide popup
-        }
-    });
-    
-    window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            document.getElementById('note-text').value = ''; // Clear text
-            notePopup.style.display = 'none'; // Hide popup
-        }
-    });
 });

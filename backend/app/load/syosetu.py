@@ -148,6 +148,7 @@ def download_novel(novel_url: str) -> None:
     novel_dir = os.path.join('shared/novels', sanitize_filename(novel_title))
     # Create english translation directory
     os.makedirs(novel_dir + '/english', exist_ok=True)
+    os.makedirs(novel_dir + '/notes', exist_ok=True)
     
     novel_dir = os.path.join(novel_dir, 'raw')
     # Create the directory if it doesn't exist
